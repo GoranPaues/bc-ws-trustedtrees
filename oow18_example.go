@@ -27,9 +27,14 @@ import (
 type SimpleChaincode struct {
 }
 
+// Init is called during chaincode instantiation to initialize any
+// data. Note that chaincode upgrade also calls this function to reset
+// or to migrate data, so be careful to avoid a scenario where you
+// inadvertently clobber your ledger's data!
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
-        fmt.Println("########### example_cc Init ###########")
+        fmt.Println("########### oow18_example Init ###########")
 	_, args := stub.GetFunctionAndParameters()
+
 	var A, B string    // Entities
 	var Aval, Bval int // Asset holdings
 	var err error
@@ -67,13 +72,14 @@ func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface) pb.Response  {
 
 }
 
+// Query ledger
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface) pb.Response {
 		return shim.Error("Unknown supported call")
 }
 
-// Transaction makes payment of X units from A to B
+// Invoke is called per transaction on the chaincode. 
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
-        fmt.Println("########### example_cc Invoke ###########")
+        fmt.Println("########### oow18_example Invoke ###########")
 	function, args := stub.GetFunctionAndParameters()
 	
 	if function != "invoke" {
@@ -235,6 +241,7 @@ func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string)
 	return shim.Success(Avalbytes)
 }
 
+// main function starts up the chaincode in the container during instantiate
 func main() {
 	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
