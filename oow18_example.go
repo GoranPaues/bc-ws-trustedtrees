@@ -1,6 +1,4 @@
 /*
-Copyright IBM Corp. 2016 All Rights Reserved.
-
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -99,7 +97,39 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		// Deletes an entity from its state
 		return t.move(stub, args)
 	}
-	return shim.Error("Unknown action, check the first argument, must be one of 'delete', 'query', or 'move'")
+	if args[0] == "create" {
+		// creates an entity with asset
+		return t.create(stub, args)
+	}
+	return shim.Error("Unknown action, check the first argument, must be one of 'delete', 'query', create, or 'move'")
+}
+
+// creates an entity with asset
+func (t *SimpleChaincode) create(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	// must be an invoke
+	var X string    // Entity
+	var Xval int // Asset holding
+	var err error
+
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3, function followed by 1 name and 1 value")
+	}
+
+	X = args[1]
+	Xval, err = strconv.Atoi(args[2])
+
+	if err != nil {
+		return shim.Error("Expecting integer value for asset holding")
+	}
+	fmt.Printf("X = %d, Xval = %d\n", X, Xval)
+
+	// Write the state to the ledger
+	err = stub.PutState(X, []byte(strconv.Itoa(Xval)))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
 }
 
 func (t *SimpleChaincode) move(stub shim.ChaincodeStubInterface, args []string) pb.Response {
