@@ -18,6 +18,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"math/rand"
 
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	pb "github.com/hyperledger/fabric/protos/peer"
@@ -111,7 +112,54 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 		// creates an entity with asset
 		return t.create(stub, args)
 	}
+	if args[0] == "createTreeOrder" {
+		// Create a tree order from username and money
+		return t.createTreeOrder(stub, args)
+	}
 	return shim.Error("Unknown action, check the first argument, must be one of 'delete', 'query', create, or 'move'")
+}
+
+// Create a tree order with username, ID, and append ORDER to username
+func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+	var owner string // Name of the "account holder" from input
+	var cash int // Amount of money in the tree order from input
+	var tree int // Number of trees to be planted
+	var orderid int // Generate something at random
+	var err error
+
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting 3, function followed by 1 name and 1 value")
+	}
+
+	owner = args[1]
+	cash, err = strconv.Atoi(args[2])
+	if err != nil {
+		return shim.Error("Expecting integer value for asset holding")
+	}
+
+	orderid = rand.Intn(100) //returns a random int n, 0 <= n < 100 TODO: generate something bigger
+
+	//convert cash to tree order
+	tree = cash / 10 //TODO: "Send" uneven/exceeded amount in return
+
+	// Put orderid and no of trees on the ledger
+	//TODO: Append string "OWNER_" to key string
+	fmt.Printf("Attempt to put state: orderid = %d, tree = %d\n", strconv.Itoa(orderid), strconv.Itoa(tree))
+	err = stub.PutState(strconv.Itoa(orderid), []byte(strconv.Itoa(tree)))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+	
+	// Put owner and orderID on the ledger
+	// TODO: Add a wait thing to get tree order confirmation first
+	// TODO: Append string "ORDER_" to key string
+	fmt.Printf("Attempt to put state: owner = %d, orderid = %d\n", owner, strconv.Itoa(orderid))
+	err = stub.PutState(owner, []byte(strconv.Itoa(orderid)))
+	if err != nil {
+		return shim.Error(err.Error())
+	}
+
+	return shim.Success(nil)
 }
 
 // creates an entity with asset
