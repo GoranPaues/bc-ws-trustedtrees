@@ -97,19 +97,23 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	if args[0] == "delete" {
 		// Deletes an entity from its state
+		// TODO: remove/modify
 		return t.delete(stub, args)
 	}
 
 	if args[0] == "query" {
 		// queries an entity state
+		// TODO: take appended strings into account
 		return t.query(stub, args)
 	}
 	if args[0] == "move" {
-		// Deletes an entity from its state
+		// Moves an asset between entities
+		// TODO: remove
 		return t.move(stub, args)
 	}
 	if args[0] == "create" {
 		// creates an entity with asset
+		// TODO: remove
 		return t.create(stub, args)
 	}
 	if args[0] == "createTreeOrder" {
@@ -124,7 +128,8 @@ func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args
 	var owner string // Name of the "account holder" from input
 	var cash int // Amount of money in the tree order from input
 	var tree int // Number of trees to be planted
-	var orderid int // Generate something at random
+	var orderid string // Generate something at random
+	var change string
 	var err error
 
 	if len(args) != 3 {
@@ -137,28 +142,37 @@ func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args
 		return shim.Error("Expecting integer value for asset holding")
 	}
 
-	orderid = rand.Intn(100) //returns a random int n, 0 <= n < 100 TODO: generate something bigger
+	// Create orderID from name + random int n, 0 <= n < 1000
+	// TODO: verify ID does not exist
+	// TODO: Maybe using ownername in this context is not that clever after all.
+	orderid = owner + strconv.Itoa(rand.Intn(1000))
 
-	//convert cash to tree order
-	tree = cash / 10 //TODO: "Send" uneven/exceeded amount in return
+	// Convert cash to tree order
+	// "Send" uneven/exceeded amount in return
+	tree = cash / 10
+	change = strconv.Itoa(cash % 10)
+	fmt.Printf("Uneven amount! " + change + " will be sent in return\n")
 
 	// Put orderid and no of trees on the ledger
-	//TODO: Append string "OWNER_" to key string
-	fmt.Printf("Attempt to put state: orderid = %d, tree = %d\n", strconv.Itoa(orderid), strconv.Itoa(tree))
-	err = stub.PutState(strconv.Itoa(orderid), []byte(strconv.Itoa(tree)))
+	// Append string "OWNER_" to key string for trackability
+	fmt.Printf("Attempt to put state: orderid = %d, tree = %d\n", orderid, strconv.Itoa(tree))
+	err = stub.PutState("OWNER_" + orderid, []byte(strconv.Itoa(tree)))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	
 	// Put owner and orderID on the ledger
 	// TODO: Add a wait thing to get tree order confirmation first
-	// TODO: Append string "ORDER_" to key string
-	fmt.Printf("Attempt to put state: owner = %d, orderid = %d\n", owner, strconv.Itoa(orderid))
-	err = stub.PutState(owner, []byte(strconv.Itoa(orderid)))
+	// Append string "ORDER_" to key string for trackability
+	fmt.Printf("Attempt to put state: owner = %d, orderid = %d\n", owner, orderid)
+	err = stub.PutState("ORDER_" + owner, []byte(orderid))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 
+	//TODO: Return something informational to the rest response (log only, atm)
+	jsonResp := "{\"Your ORDERID: \":\" " + orderid + "\",\"No of trees to be planted\":\" " + strconv.Itoa(tree) + "\"}"
+	fmt.Printf("CreateTreeOrder Response:%s\n", jsonResp)
 	return shim.Success(nil)
 }
 
