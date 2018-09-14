@@ -25,6 +25,7 @@ import (
 )
 
 // SimpleChaincode example simple Chaincode implementation
+// TODO: Rename
 type SimpleChaincode struct {
 }
 
@@ -103,7 +104,6 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface) pb.Response {
 
 	if args[0] == "query" {
 		// queries an entity state
-		// TODO: take appended strings into account
 		return t.query(stub, args)
 	}
 	if args[0] == "move" {
@@ -154,18 +154,18 @@ func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args
 	fmt.Printf("Uneven amount! " + change + " will be sent in return\n")
 
 	// Put orderid and no of trees on the ledger
-	// Append string "OWNER_" to key string for trackability
+	// Append string "ORDER_" to key string for trackability
 	fmt.Printf("Attempt to put state: orderid = %d, tree = %d\n", orderid, strconv.Itoa(tree))
-	err = stub.PutState("OWNER_" + orderid, []byte(strconv.Itoa(tree)))
+	err = stub.PutState("ORDER_" + orderid, []byte(strconv.Itoa(tree)))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
 	
 	// Put owner and orderID on the ledger
 	// TODO: Add a wait thing to get tree order confirmation first
-	// Append string "ORDER_" to key string for trackability
+	// Append string "OWNER_" to key string for trackability
 	fmt.Printf("Attempt to put state: owner = %d, orderid = %d\n", owner, orderid)
-	err = stub.PutState("ORDER_" + owner, []byte(orderid))
+	err = stub.PutState("OWNER_" + owner, []byte(orderid))
 	if err != nil {
 		return shim.Error(err.Error())
 	}
@@ -174,6 +174,52 @@ func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args
 	jsonResp := "{\"Your ORDERID: \":\" " + orderid + "\",\"No of trees to be planted\":\" " + strconv.Itoa(tree) + "\"}"
 	fmt.Printf("CreateTreeOrder Response:%s\n", jsonResp)
 	return shim.Success(nil)
+}
+
+// Query callback representing the query of a chaincode
+func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
+
+	var qt string // QueryType
+	var id string // name or orderid
+	var Avalbytes []byte
+	var err error
+
+	if len(args) != 3 {
+		return shim.Error("Incorrect number of arguments. Expecting querytype: 'name' or 'id' and string to query")
+	}
+
+	qt = args[1]
+	id = args[2]
+
+	if qt == "name" {
+		// name-strings are of type OWNER_name
+		id = "OWNER_" + id
+
+		// Get the state from the ledger
+		Avalbytes, err = stub.GetState(id)
+	}
+
+	if qt == "id" {
+		// name-strings are of type ORDER_id
+		id = "ORDER_" + id
+
+		// Get the state from the ledger
+		Avalbytes, err = stub.GetState(id)
+	}
+
+	if err != nil {
+		jsonResp := "{\"Error\":\"Failed to get state for " + id + "\"}"
+		return shim.Error(jsonResp)
+	}
+
+	if Avalbytes == nil {
+		jsonResp := "{\"Error\":\"Nil amount for " + id + "\"}"
+		return shim.Error(jsonResp)
+	}
+
+	jsonResp := "{\"Param A\":\"" + id + "\",\"Param B\":\"" + string(Avalbytes) + "\"}"
+	fmt.Printf("Query Response:%s\n", jsonResp)
+	return shim.Success(Avalbytes)
 }
 
 // creates an entity with asset
@@ -276,35 +322,6 @@ func (t *SimpleChaincode) delete(stub shim.ChaincodeStubInterface, args []string
 	}
 
 	return shim.Success(nil)
-}
-
-// Query callback representing the query of a chaincode
-func (t *SimpleChaincode) query(stub shim.ChaincodeStubInterface, args []string) pb.Response {
-
-	var A string // Entities
-	var err error
-
-	if len(args) != 2 {
-		return shim.Error("Incorrect number of arguments. Expecting name of the person to query")
-	}
-
-	A = args[1]
-
-	// Get the state from the ledger
-	Avalbytes, err := stub.GetState(A)
-	if err != nil {
-		jsonResp := "{\"Error\":\"Failed to get state for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	if Avalbytes == nil {
-		jsonResp := "{\"Error\":\"Nil amount for " + A + "\"}"
-		return shim.Error(jsonResp)
-	}
-
-	jsonResp := "{\"Name\":\"" + A + "\",\"Amount\":\"" + string(Avalbytes) + "\"}"
-	fmt.Printf("Query Response:%s\n", jsonResp)
-	return shim.Success(Avalbytes)
 }
 
 // main function starts up the chaincode in the container during instantiate
