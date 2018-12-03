@@ -13,7 +13,7 @@ Get your skills going on decentralized application development before everybody 
 A second tree planting participant, Pape's Plantation, wants to join the network. It is our job to spin up their chaincode and adapt the code to this participant.
 
 # LAB - Suggested Workflow:
-- Log in to OABCS using the credentials provided.
+- Log in to OBCS using the credentials provided.
 - Locate the instance of Pape's Plantation.
 - Locate the provided channel between Pape's Plantation and the umbrella organisation for Trusted Trees - Claudio's Controlling.
 - Download the chaincode from GitHub in Go. (HLF also supports Java & NodeJS - but as of today, not this lab!)
