@@ -1,5 +1,5 @@
 # Blockchain Workshop: Trusted Trees use case
-*Hands-on Lab on Hyperledger Fabric chaincode development
+*Hands-on Lab on Hyperledger Fabric chaincode development*
 
 PLEASE NOTE: YOU MUST BRING YOUR OWN LAPTOP (BYOL) TO PARTICIPATE IN THE HANDS-ON LABS.<br>
 Get your skills going on decentralized application development before everybody else! This session will jump-start your career in the decentralized field—making you ready for the future and an even more requested resource for companies all over the world. Blockchain is on everybody’s lips, and in this hands-on lab, you will have the opportunity to get your hands dirty developing chaincode directly in the cloud, using a fun and engaging forest-saving use case.*
