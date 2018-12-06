@@ -151,7 +151,7 @@ func (t *SimpleChaincode) createTreeOrder(stub shim.ChaincodeStubInterface, args
 
 	// Convert cash to tree order
 	// "Send" uneven/exceeded amount in return
-	price := 10
+	price := 20
 	tree = cash / price
 	change = strconv.Itoa(cash % price)
 	fmt.Printf("Uneven amount! " + change + " will be sent in return\n")
